@@ -1,0 +1,27 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+# Load dataset
+dataset = pd.read_csv("/content/Iris.csv")
+X = dataset.iloc[:, :-1].values
+y = dataset.iloc[:, -1].values
+
+# Split and scale data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=39)
+
+# Fit the scaler on the training data and use it to transform both training and test data
+scaler = StandardScaler()  # Create a single scaler instance
+X_train = scaler.fit_transform(X_train) 
+X_test = scaler.transform(X_test)  # Use the same scaler instance to transform test data
+
+# Train and predict with Random Forest
+classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+classifier.fit(X_train, y_train)
+y_pred = classifier.predict(X_test)
+
+# Evaluate and display results
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print('Accuracy:', accuracy_score(y_test, y_pred))

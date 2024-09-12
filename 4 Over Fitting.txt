@@ -1,0 +1,59 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score
+
+# Define the true function to model
+def true_fun(X):
+    return np.cos(1.5 * np.pi * X)
+
+# Set random seed for reproducibility
+np.random.seed(0)
+
+# Generate sample data
+n_samples = 30
+degrees = [1, 4, 15]
+
+X = np.sort(np.random.rand(n_samples))
+y = true_fun(X) + np.random.randn(n_samples) * 0.1
+
+plt.figure(figsize=(14, 5))
+for i in range(len(degrees)):
+    ax = plt.subplot(1, len(degrees), i + 1)
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    # Create polynomial features and linear regression pipeline
+    polynomial_features = PolynomialFeatures(degree=degrees[i], include_bias=False)
+    linear_regression = LinearRegression()
+    pipeline = Pipeline([
+        ("polynomial_features", polynomial_features),
+        ("linear_regression", linear_regression),
+    ])
+    pipeline.fit(X[:, np.newaxis], y)
+
+    # Evaluate the model using cross-validation
+    scores = cross_val_score(
+        pipeline, X[:, np.newaxis], y, scoring="neg_mean_squared_error", cv=10
+    )
+
+    # Plot predictions and true function
+    X_test = np.linspace(0, 1, 100)
+    ax.plot(X_test, pipeline.predict(X_test[:, np.newaxis]), label="Model")
+    ax.plot(X_test, true_fun(X_test), label="True function")
+    ax.scatter(X, y, edgecolor="b", s=20, label="Samples")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_xlim((0, 1))
+    ax.set_ylim((-2, 2))
+    ax.legend(loc="best")
+    ax.set_title(
+        "Degree {}\nMSE = {:.2e} (+/- {:.2e})".format(
+            degrees[i], -scores.mean(), scores.std()
+        )
+    )
+
+plt.tight_layout()
+plt.show()
